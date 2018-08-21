@@ -1,2 +1,2 @@
-# CopyPass
-Random Password Generator written in Bash
+# Soda
+Soda for PostgreSQL Back up & Restore Processes written in Bash
