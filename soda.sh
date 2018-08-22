@@ -1,5 +1,9 @@
 #!/usr/bin/bash
 printBanner() {
+	RED='\033[0;31m'
+        GREEN='\033[0;32m'
+        NC='\033[0m'
+	echo -e "${GREEN}";
         echo "                                o               ";
         echo "                               <|>              ";
         echo "                               < \              ";
@@ -12,6 +16,7 @@ printBanner() {
         echo "                                                ";
         echo "                                          by fb ";
         echo "                                                ";
+	echo -e "${NC}";
 }
 help() {
         echo "1 for Take database backup         ";
@@ -36,24 +41,33 @@ help() {
                 then
 			echo "Path is already exist, fyi";
                 	takeDump $path;
-                else
+			echo "Tomcat will be starting, please follow catalina logs..."
+			`systemctl start tomcat`
+		else
 			echo "Path will be created...";
                 	`mkdir -p $path`;
                 	takeDump $path;
-                	#statements
+			echo "Tomcat will be starting, please follow catalina logs..."
+			`systemctl start tomcat`
                 fi
 
         else
                 echo "Tomcat stopping ${RED}failed${NC}";
         fi
                 ;;
-        2) echo "Second option is selected"
+        2) echo "Please enter backup directory"
+	read path;
+	if [ -d $path ]
+	then
+		ls -lrt $path
+	fi
                 ;;
         *) echo "Invalid selection"
                 help
                 ;;
         esac
 }
+
 main(){
         printBanner
         if [ "$1" == "-h" ]
@@ -63,6 +77,7 @@ main(){
                 printBanner
         fi
 }
+
 takeDump(){
 	sudo -Hiu postgres pg_dump atar | gzip > $1/atardb`date +%d-%m-%y`.sql.gz
 }
