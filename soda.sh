@@ -1,8 +1,8 @@
 #!/usr/bin/bash
 printBanner() {
 	RED='\033[0;31m'
-	GREEN='\033[0;32m'
-	NC='\033[0m'
+        GREEN='\033[0;32m'
+        NC='\033[0m'
 	echo -e "${GREEN}";
         echo "                                o               ";
         echo "                               <|>              ";
@@ -22,6 +22,7 @@ help() {
         echo "1 for Take database backup         ";
         echo "2 for List database backups        ";
         echo "3 for Restore from database backup ";
+	echo "4 for Show / Edit backup directory ";
         echo "Please select one of the options   ";
         read opt
         case "$opt" in
@@ -62,8 +63,24 @@ help() {
 		ls -lrt $path
 	fi
                 ;;
-        *) echo "Invalid selection"
-                help
+	4) echo "Please enter E(dit) or S(how)"
+	read es;
+	if [ $es == E ]
+	then
+		echo "Please enter new full path of backup directory"
+		read backupPath;
+		if [ -d $backupPath ]
+		then
+			mkdir -p $backupPath;
+		fi	
+		echo "$backupPath will be used for backup directory";
+	
+	else
+		echo "Default path is /home/atar/backups";
+	fi
+		;;
+        *) echo "Invalid selection";
+        	help
                 ;;
         esac
 }
