@@ -145,7 +145,7 @@ main(){
 }
 
 takeDump(){
-	sudo -Hiu postgres pg_dump -v atar | gzip > ${BACKUP_DIR}/atardb`date +%d-%m-%y`.sql.gz
+	sudo -Hiu postgres pg_dump -Fcv atar | gzip > ${BACKUP_DIR}/atardb`date +%d-%m-%y`.sql.gz
 }
 
 listDump(){
