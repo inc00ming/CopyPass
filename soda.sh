@@ -138,6 +138,6 @@ listDump(){
 }
 
 rotate(){
-	find $BACKUP_DIR -mtime -$1 -name "*.sql.gz"
+	find $BACKUP_DIR -mtime +$1 -name "*.sql.gz" -delete
 }
 main $1 $2
