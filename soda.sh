@@ -122,6 +122,21 @@ main(){
 				echo -e "Rotation will be done for dumps which are older than${YELLOW} $2 ${NC}days"
 				rotate $2
 				;;
+		-show)
+				echo -e "Current backup directory: ${YELLOW} $BACKUP_DIR ${NC}"
+				;;
+		-edit)
+				echo "Enter new backup diretory"
+				read NEW_BACKUP_DIR
+				BACKUP_DIR=${NEW_BACKUP_DIR}
+				if [ -d $BACKUP_DIR ]
+				then
+					echo 
+				else
+					mkdir -p $BACKUP_DIR
+				fi
+				echo -e "New backup directory: ${YELLOW} $BACKUP_DIR ${NC}"
+				;;
 		*)
 				echo "Invalid option"
 				help
