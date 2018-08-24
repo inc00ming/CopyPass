@@ -138,8 +138,7 @@ main(){
 				echo -e "New backup directory: ${YELLOW} $BACKUP_DIR ${NC}"
 				;;
 		*)
-				echo "Invalid option"
-				help
+				help1
 				;;
 		esac
 }
@@ -154,5 +153,19 @@ listDump(){
 
 rotate(){
 	find $BACKUP_DIR -mtime +$1 -name "*.sql.gz" -delete
+}
+
+help1(){
+	usage="$(basename "$0") [-help] [-list] [-rotate n] [-show] [-edit] [-restore s] [-upgrade w] -- program to handle whole error prone process 
+	
+where:
+	${YELLOW}-help${NC}  		show help text
+       	${YELLOW}-list${NC}  		show backup files
+       	${YELLOW}-rotate n${NC}	apply rotation to backup files, delete all backups which are older than n day(s)
+	${YELLOW}-show${NC}		show backup directory
+	${YELLOW}-edit${NC}		edit backup directory
+	${YELLOW}-restore s${NC}	restore form backup file s
+	${YELLOW}-upgrade w${NC}	upgrade tomcat application with war file w"
+	echo -e "${usage}"
 }
 main $1 $2
