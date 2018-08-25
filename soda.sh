@@ -137,6 +137,19 @@ main(){
 				fi
 				echo -e "New backup directory: ${YELLOW} $BACKUP_DIR ${NC}"
 				;;
+		-upgrade)
+        			echo "Checking tomcat.service status..."
+       				tomcatStatus=`systemctl is-active tomcat`;
+        			if [ $tomcatStatus == "failed"  ]
+        			then
+					echo "Tomcat already stopped, war file will be copied to catalina home..."
+					yes | cp $2 ${CATALINA_DIR}/webapps/ROOT.war
+				fi
+			
+				;;
+		-version)
+				getVersion
+				;;
 		*)
 				help1
 				;;
@@ -167,5 +180,10 @@ where:
 	${YELLOW}-restore s${NC}	restore form backup file s
 	${YELLOW}-upgrade w${NC}	upgrade tomcat application with war file w"
 	echo -e "${usage}"
+}
+
+getVersion(){
+	version=`curl -ks 'https://localhost:11443/api/auth/me' | python -c "import sys, json; print(json.load(sys.stdin)['version'])"`;
+	echo $version
 }
 main $1 $2
