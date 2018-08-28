@@ -150,6 +150,10 @@ main(){
 		-version)
 				getVersion
 				;;
+		-include)
+				includeProperties
+				echo $furkan
+				;;
 		*)
 				help1
 				;;
@@ -185,5 +189,10 @@ where:
 getVersion(){
 	version=`curl -ks 'https://localhost:11443/api/auth/me' | python -c "import sys, json; print(json.load(sys.stdin)['version'])"`;
 	echo $version
+}
+
+includeProperties(){
+	. properties.conf
+	`sed -i 's/furkan=.*/furkan=dasautos/' properties.conf`
 }
 main $1 $2
