@@ -1,5 +1,4 @@
 #!/usr/bin/bash
-BACKUP_DIR="/home/atar/backups"
 
 #Black        0;30     Dark Gray     1;30
 #Red          0;31     Light Red     1;31
@@ -109,77 +108,89 @@ main(){
         	mkdir -p $BACKUP_DIR
         fi
         case "$1" in
-        	-backup)
-				echo -e "Database dump will be saved to${YELLOW} $BACKUP_DIR ${NC}..."
-				sleep 2
-				takeDump
-				;;
-		-list)		
-				echo -e "Backup directory${YELLOW} $BACKUP_DIR ${NC}includes backup(s) below"
-				listDump
-				;;
-		-rotate)
-				echo -e "Rotation will be done for dumps which are older than${YELLOW} $2 ${NC}days"
-				rotate $2
-				;;
-		-show)
-				echo -e "Current backup directory: ${YELLOW} $BACKUP_DIR ${NC}"
-				;;
-		-edit)
-				echo "Enter new backup diretory"
-				read NEW_BACKUP_DIR
-				BACKUP_DIR=${NEW_BACKUP_DIR}
-				if [ -d $BACKUP_DIR ]
-				then
-					echo 
-				else
-					mkdir -p $BACKUP_DIR
-				fi
-				echo -e "New backup directory: ${YELLOW} $BACKUP_DIR ${NC}"
-				;;
-		-upgrade)
-        			echo "Checking tomcat.service status..."
-       				tomcatStatus=`systemctl is-active tomcat`;
-        			if [ $tomcatStatus == "failed"  ]
-        			then
-					echo "Tomcat already stopped, war file will be copied to catalina home..."
-					yes | cp $2 ${CATALINA_DIR}/webapps/ROOT.war
-				fi
-			
-				;;
-		-version)
-				getVersion
-				;;
-		-include)
-				includeProperties
-				echo $furkan
-				;;
-		*)
-				help1
-				;;
+        	
+	        -backup)
+					includeProperties
+					echo -e "Database dump will be saved to ${YELLOW}${BACKUP_DIRECTORY}${NC}..."
+					sleep 2
+					takeDump
+					;;
+			-list)
+					includeProperties		
+					echo -e "Backup directory ${YELLOW}${BACKUP_DIRECTORY}${NC} includes backup(s) below"
+					listDump
+					;;
+			-rotate)
+					echo -e "Rotation will be done for dumps which are older than${YELLOW} $2 ${NC}days"
+					rotate $2
+					;;
+			-show)
+					echo -e "You can find the backup directory, tomcat service name, catalina home directory, ATAR URL below.\n\n"
+					includeProperties
+					echo -e "Backup Directory:        ${YELLOW}${BACKUP_DIRECTORY}${NC}"
+					echo -e "Tomcat Service Name:     ${YELLOW}${TOMCAT_SERVICE_NAME}${NC}"
+					echo -e "Catalina Home Directory: ${YELLOW}${CATALINA_HOME}${NC}"
+					echo -e "ATAR URL:                ${YELLOW}${ATAR_URL}${NC}"
+					;;
+			-edit)
+					includeProperties
+					echo "Enter new backup directory"
+					read NEW_BACKUP_DIRECTORY
+					sedParam="s/BACKUP_DIRECTORY=.*/BACKUP_DIRECTORY=${NEW_BACKUP_DIRECTORY/\//\\\/}/"
+					echo $sedParam
+					sed -i '$sedParam' properties.conf
+					includeProperties
+					if [ -d $BACKUP_DIRECTORY ]
+					then
+						echo 
+					else
+						mkdir -p $BACKUP_DIRECTORY
+					fi
+					echo -e "New backup directory: ${YELLOW}${BACKUP_DIRECTORY}${NC}"
+					;;
+			-upgrade)
+						includeProperties
+	        			echo "Checking tomcat service status..."
+	       				tomcatStatus=`systemctl is-active ${TOMCAT_SERVICE_NAME}`;
+	        			if [ $tomcatStatus == "failed"  ]
+	        			then
+							echo "Tomcat already stopped, war file will be copied to catalina home..."
+							yes | cp $2 ${CATALINA_HOME}/webapps/ROOT.war
+						fi
+					;;
+			-version)
+					getVersion
+					;;
+			*)
+					help1
+					;;
 		esac
 }
 
 takeDump(){
-	sudo -Hiu postgres pg_dump -Fcv atar | gzip > ${BACKUP_DIR}/atardb`date +%d-%m-%y`.sql.gz
+	includeProperties
+	sudo -Hiu postgres pg_dump -v atar | gzip > ${BACKUP_DIRECTORY}/atar_db_backup_`date +%d-%m-%y`.sql.gz
 }
 
 listDump(){
-	ls -lrt $BACKUP_DIR
+	includeProperties
+	ls -lrht $BACKUP_DIRECTORY | awk {'print $5" "$6" "$7" "$8" "$9'}
 }
 
 rotate(){
-	find $BACKUP_DIR -mtime +$1 -name "*.sql.gz" -delete
+	includeProperties
+	find $BACKUP_DIRECTORY -mtime +$1 -name "*.sql.gz" -delete
 }
 
 help1(){
-	usage="$(basename "$0") [-help] [-list] [-rotate n] [-show] [-edit] [-restore s] [-upgrade w] -- program to handle whole error prone process 
+	usage="$(basename "$0") [-help] [-backup] [-list] [-rotate n] [-show] [-edit] [-restore s] [-upgrade w] -- program to handle whole error prone process 
 	
 where:
-	${YELLOW}-help${NC}  		show help text
-       	${YELLOW}-list${NC}  		show backup files
+	${YELLOW}-help${NC}		show help text
+	${YELLOW}-backup${NC}		take database backup
+       	${YELLOW}-list${NC}		show backup files
        	${YELLOW}-rotate n${NC}	apply rotation to backup files, delete all backups which are older than n day(s)
-	${YELLOW}-show${NC}		show backup directory
+	${YELLOW}-show${NC}		show backup directory, tomcat service name and catalina home directory
 	${YELLOW}-edit${NC}		edit backup directory
 	${YELLOW}-restore s${NC}	restore form backup file s
 	${YELLOW}-upgrade w${NC}	upgrade tomcat application with war file w"
@@ -187,12 +198,16 @@ where:
 }
 
 getVersion(){
-	version=`curl -ks 'https://localhost:11443/api/auth/me' | python -c "import sys, json; print(json.load(sys.stdin)['version'])"`;
+	includeProperties
+	version=`curl -ks '${ATAR_URL}/api/auth/me' | python -c "import sys, json; print(json.load(sys.stdin)['version'])"`;
 	echo $version
 }
 
 includeProperties(){
 	. properties.conf
-	`sed -i 's/furkan=.*/furkan=dasautos/' properties.conf`
+	#`sed -i 's/furkan=.*/furkan=dasautos/' properties.conf`
+	#echo -e "Backup Directory:        ${YELLOW}${BACKUP_DIRECTORY}${NC}"
+	#echo -e "Tomcat Service Name:     ${YELLOW}${TOMCAT_SERVICE_NAME}${NC}"
+	#echo -e "Catalina Home Directory: ${YELLOW}${CATALINA_HOME}${NC}"
 }
 main $1 $2
