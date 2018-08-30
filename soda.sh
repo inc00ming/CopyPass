@@ -134,9 +134,22 @@ main(){
 					;;
 			-edit)
 					includeProperties
-					echo "Enter new backup directory"
+					echo "Enter backup directory:"
 					read NEW_BACKUP_DIRECTORY
 					sed -i "s;BACKUP_DIRECTORY=.*;BACKUP_DIRECTORY=${NEW_BACKUP_DIRECTORY};g" properties.conf
+
+					echo "Enter tomcat service name:"
+                                        read NEW_TOMCAT_SERVICE_NAME
+                                        sed -i "s;TOMCAT_SERVICE_NAME=.*;TOMCAT_SERVICE_NAME=${NEW_TOMCAT_SERVICE_NAME};g" properties.conf
+
+					echo "Enter catalina home directory:"
+                                        read NEW_CATALINA_HOME
+                                        sed -i "s;CATALINA_HOME=.*;CATALINA_HOME=${NEW_CATALINA_HOME};g" properties.conf
+
+					echo "Enter ATAR URL:"
+                                        read NEW_ATAR_URL
+                                        sed -i "s;ATAR_URL=.*;ATAR_URL=${NEW_ATAR_URL};g" properties.conf
+
 					includeProperties
 					if [ -d $BACKUP_DIRECTORY ]
 					then
