@@ -28,7 +28,7 @@ printBanner() {
         echo "      <\    o       o    o      |     o      |  ";
         echo " _\o__</    <\__ __/>    <\__  / \    <\__  / \ ";
         echo "                                                ";
-        echo "                                          by fb ";
+        echo -e "		                         ${YELLOW}by fb ";
         echo "                                                ";
 	echo -e "${NC}";
 }
@@ -136,9 +136,7 @@ main(){
 					includeProperties
 					echo "Enter new backup directory"
 					read NEW_BACKUP_DIRECTORY
-					sedParam="s/BACKUP_DIRECTORY=.*/BACKUP_DIRECTORY=${NEW_BACKUP_DIRECTORY/\//\\\/}/"
-					echo $sedParam
-					sed -i '$sedParam' properties.conf
+					sed -i "s;BACKUP_DIRECTORY=.*;BACKUP_DIRECTORY=${NEW_BACKUP_DIRECTORY};g" properties.conf
 					includeProperties
 					if [ -d $BACKUP_DIRECTORY ]
 					then
@@ -174,7 +172,7 @@ takeDump(){
 
 listDump(){
 	includeProperties
-	ls -lrht $BACKUP_DIRECTORY | awk {'print $5" "$6" "$7" "$8" "$9'}
+	ls -lrht $BACKUP_DIRECTORY | awk {'print $5" "$9'}
 }
 
 rotate(){
@@ -205,9 +203,5 @@ getVersion(){
 
 includeProperties(){
 	. properties.conf
-	#`sed -i 's/furkan=.*/furkan=dasautos/' properties.conf`
-	#echo -e "Backup Directory:        ${YELLOW}${BACKUP_DIRECTORY}${NC}"
-	#echo -e "Tomcat Service Name:     ${YELLOW}${TOMCAT_SERVICE_NAME}${NC}"
-	#echo -e "Catalina Home Directory: ${YELLOW}${CATALINA_HOME}${NC}"
 }
 main $1 $2
