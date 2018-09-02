@@ -134,21 +134,42 @@ main(){
 					;;
 			-edit)
 					includeProperties
+					
 					echo "Enter backup directory:"
 					read NEW_BACKUP_DIRECTORY
-					sed -i "s;BACKUP_DIRECTORY=.*;BACKUP_DIRECTORY=${NEW_BACKUP_DIRECTORY};g" properties.conf
-
+					if [ -z "$NEW_BACKUP_DIRECTORY" ]
+					then
+						echo -e "No change, current backup directory is ${YELLOW}${BACKUP_DIRECTORY}${NC}"
+					else
+						sed -i "s;BACKUP_DIRECTORY=.*;BACKUP_DIRECTORY=${NEW_BACKUP_DIRECTORY};g" properties.conf
+					fi
+					
 					echo "Enter tomcat service name:"
                                         read NEW_TOMCAT_SERVICE_NAME
-                                        sed -i "s;TOMCAT_SERVICE_NAME=.*;TOMCAT_SERVICE_NAME=${NEW_TOMCAT_SERVICE_NAME};g" properties.conf
+					if [ -z "$NEW_TOMCAT_SERVICE_NAME" ]
+                                        then
+                                                echo -e "No change, current tomcat service name is ${YELLOW}${TOMCAT_SERVICE_NAME}${NC}"
+                                        else
+                                        	sed -i "s;TOMCAT_SERVICE_NAME=.*;TOMCAT_SERVICE_NAME=${NEW_TOMCAT_SERVICE_NAME};g" properties.conf
+                                        fi
 
 					echo "Enter catalina home directory:"
                                         read NEW_CATALINA_HOME
-                                        sed -i "s;CATALINA_HOME=.*;CATALINA_HOME=${NEW_CATALINA_HOME};g" properties.conf
+				 	if [ -z "$NEW_CATALINA_HOME" ]
+                                        then
+                                                echo -e "No change, current catalina home directory is ${YELLOW}${CATALINA_HOME}${NC}"
+                                        else
+                                        	sed -i "s;CATALINA_HOME=.*;CATALINA_HOME=${NEW_CATALINA_HOME};g" properties.conf
+                                        fi
 
 					echo "Enter ATAR URL:"
                                         read NEW_ATAR_URL
-                                        sed -i "s;ATAR_URL=.*;ATAR_URL=${NEW_ATAR_URL};g" properties.conf
+					if [ -z "$NEW_ATAR_URL" ]
+                                        then
+                                                echo -e "No change, current ATAR URL is ${YELLOW}${ATAR_URL}${NC}"
+                                        else
+                                        	sed -i "s;ATAR_URL=.*;ATAR_URL=${NEW_ATAR_URL};g" properties.conf
+                                        fi
 
 					includeProperties
 					if [ -d $BACKUP_DIRECTORY ]
@@ -157,10 +178,13 @@ main(){
 					else
 						mkdir -p $BACKUP_DIRECTORY
 					fi
-					echo -e "New backup directory: ${YELLOW}${BACKUP_DIRECTORY}${NC}"
+					echo -e "Backup directory: ${YELLOW}${BACKUP_DIRECTORY}${NC}"
+					echo -e "Tomcat service name: ${YELLOW}${TOMCAT_SERVICE_NAME}${NC}"
+					echo -e "Catalina home directory: ${YELLOW}${CATALINA_HOME}${NC}"
+					echo -e "ATAR URL: ${YELLOW}${ATAR_URL}${NC}"
 					;;
 			-upgrade)
-						includeProperties
+					includeProperties
 	        			echo "Checking tomcat service status..."
 	       				tomcatStatus=`systemctl is-active ${TOMCAT_SERVICE_NAME}`;
 	        			if [ $tomcatStatus == "failed"  ]
@@ -180,7 +204,9 @@ main(){
 
 takeDump(){
 	includeProperties
-	sudo -Hiu postgres pg_dump -v atar | gzip > ${BACKUP_DIRECTORY}/atar_db_backup_`date +%d-%m-%y`.sql.gz
+	version=$( getVersion )
+	backuploc="${BACKUP_DIRECTORY}/atar_${version}_db_backup_`date +%d-%m-%y`.sql.gz"
+	sudo -Hiu postgres pg_dump -v atar | gzip > "${backuploc}"
 }
 
 listDump(){
@@ -210,8 +236,11 @@ where:
 
 getVersion(){
 	includeProperties
-	version=`curl -ks '${ATAR_URL}/api/auth/me' | python -c "import sys, json; print(json.load(sys.stdin)['version'])"`;
-	echo $version
+	curlout=`curl -ks ${ATAR_URL}/api/auth/me` 
+	curlout=${curlout//[[:space:]]}
+	version=`python -c "import sys, json; print(json.loads(\"\"\"${curlout}\"\"\")['version'])"`
+	buildNumber=`python -c "import sys, json; print(json.loads(\"\"\"${curlout}\"\"\")['buildNumber'])"`
+	echo -e "$version-$buildNumber"
 }
 
 includeProperties(){
