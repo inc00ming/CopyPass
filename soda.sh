@@ -157,8 +157,9 @@ main(){
 }
 
 restore(){
+	includeProperties
 	sudo -Hiu postgres dropdb atar && sudo -Hiu postgres createdb atar && cat "$1" | gunzip -c | sudo -Hiu postgres psql atar
-	systemctl start tomcat.service
+	systemctl start ${TOMCAT_SERVICE_NAME}
 }
 
 takeDump(){
