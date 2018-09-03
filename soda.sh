@@ -65,7 +65,12 @@ main(){
 					read NEW_BACKUP_DIRECTORY
 					if [ -z "$NEW_BACKUP_DIRECTORY" ]
 					then
-						echo -e "No change, current backup directory is ${YELLOW}${BACKUP_DIRECTORY}${NC}"
+						if [ -d $BACKUP_DIRECTORY ]
+						then
+							echo -e "No change, current backup directory is ${YELLOW}${BACKUP_DIRECTORY}${NC}"
+						else
+							mkdir -p $BACKUP_DIRECTORY
+						fi
 					elif [ -d $NEW_BACKUP_DIRECTORY ]
 					then
 						sed -i "s;BACKUP_DIRECTORY=.*;BACKUP_DIRECTORY=${NEW_BACKUP_DIRECTORY};g" properties.conf
@@ -143,7 +148,7 @@ main(){
                                                 echo "Tomcat application is running, it will be stopped first"
                                                 systemctl stop ${TOMCAT_SERVICE_NAME}
 					fi
-					restore
+					restore $2
 					;;
 			*)
 					help
@@ -152,7 +157,8 @@ main(){
 }
 
 restore(){
-	dropdb atar && createdb atar
+	sudo -Hiu postgres dropdb atar && sudo -Hiu postgres createdb atar && cat "$1" | gunzip -c | sudo -Hiu postgres psql atar
+	systemctl start tomcat.service
 }
 
 takeDump(){
