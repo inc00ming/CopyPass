@@ -32,72 +32,6 @@ printBanner() {
         echo "                                                ";
 	echo -e "${NC}";
 }
-help() {
-        echo "1 for Take database backup         ";
-        echo "2 for List database backups        ";
-        echo "3 for Restore from database backup ";
-	echo "4 for Show / Edit backup directory ";
-        echo "Please select one of the options   ";
-        read opt
-        case "$opt" in
-        1) echo "Tomcat will be stopped for database dump"
-        RED='\033[0;31m'
-        GREEN='\033[0;32m'
-        NC='\033[0m'
-        `systemctl stop tomcat > /dev/null 2>&1`;
-        echo "Checking tomcat.service status..."
-        tomcatStatus=`systemctl is-active tomcat`;
-        if [ $tomcatStatus == "failed"  ]
-        then
-                echo -e "Tomcat stopped ${GREEN}successfully${NC}";
-                echo "Please enter the directory for dump";
-                read path;
-                if [[ -d $path ]]
-                then
-			echo "Path is already exist, fyi";
-                	takeDump $path;
-			echo "Tomcat will be starting, please follow catalina logs..."
-			`systemctl start tomcat`
-		else
-			echo "Path will be created...";
-                	`mkdir -p $path`;
-                	takeDump $path;
-			echo "Tomcat will be starting, please follow catalina logs..."
-			`systemctl start tomcat`
-                fi
-
-        else
-                echo "Tomcat stopping ${RED}failed${NC}";
-        fi
-                ;;
-        2) echo "Please enter backup directory"
-	read path;
-	if [ -d $path ]
-	then
-		ls -lrt $path
-	fi
-                ;;
-	4) echo "Please enter E(dit) or S(how)"
-	read es;
-	if [ $es == E ]
-	then
-		echo "Please enter new full path of backup directory"
-		read backupPath;
-		if [ -d $backupPath ]
-		then
-			mkdir -p $backupPath;
-		fi	
-		echo "$backupPath will be used for backup directory";
-	
-	else
-		echo "Default path is /home/atar/backups";
-	fi
-		;;
-        *) echo "Invalid selection";
-        	help
-                ;;
-        esac
-}
 
 main(){
         printBanner
@@ -109,7 +43,7 @@ main(){
         fi
         case "$1" in
         	
-	        -backup)
+	 	       -backup)
 					includeProperties
 					echo -e "Database dump will be saved to ${YELLOW}${BACKUP_DIRECTORY}${NC}..."
 					sleep 2
@@ -140,7 +74,11 @@ main(){
 					if [ -z "$NEW_BACKUP_DIRECTORY" ]
 					then
 						echo -e "No change, current backup directory is ${YELLOW}${BACKUP_DIRECTORY}${NC}"
+					elif [ -d $NEW_BACKUP_DIRECTORY ]
+					then
+						sed -i "s;BACKUP_DIRECTORY=.*;BACKUP_DIRECTORY=${NEW_BACKUP_DIRECTORY};g" properties.conf
 					else
+						mkdir -p $NEW_BACKUP_DIRECTORY
 						sed -i "s;BACKUP_DIRECTORY=.*;BACKUP_DIRECTORY=${NEW_BACKUP_DIRECTORY};g" properties.conf
 					fi
 					
@@ -150,7 +88,9 @@ main(){
                                         then
                                                 echo -e "No change, current tomcat service name is ${YELLOW}${TOMCAT_SERVICE_NAME}${NC}"
                                         else
-                                        	sed -i "s;TOMCAT_SERVICE_NAME=.*;TOMCAT_SERVICE_NAME=${NEW_TOMCAT_SERVICE_NAME};g" properties.conf
+						
+                                        	systemctl list-units | grep $NEW_TOMCAT_SERVICE_NAME || echo "Tomcat service is not exist"
+						 sed -i "s;TOMCAT_SERVICE_NAME=.*;TOMCAT_SERVICE_NAME=${NEW_TOMCAT_SERVICE_NAME};g" properties.conf
                                         fi
 
 					echo "Enter catalina home directory:"
@@ -158,9 +98,14 @@ main(){
 				 	if [ -z "$NEW_CATALINA_HOME" ]
                                         then
                                                 echo -e "No change, current catalina home directory is ${YELLOW}${CATALINA_HOME}${NC}"
-                                        else
+                                        elif [ -d $NEW_CATALINA_HOME ]
+					then
+						echo "New directory is already exist"
                                         	sed -i "s;CATALINA_HOME=.*;CATALINA_HOME=${NEW_CATALINA_HOME};g" properties.conf
-                                        fi
+                                        else
+						echo "Invalid catalina home directory"
+						echo -e "No change, current catalina home directory is ${YELLOW}${CATALINA_HOME}${NC}"
+					fi
 
 					echo "Enter ATAR URL:"
                                         read NEW_ATAR_URL
@@ -171,13 +116,7 @@ main(){
                                         	sed -i "s;ATAR_URL=.*;ATAR_URL=${NEW_ATAR_URL};g" properties.conf
                                         fi
 
-					includeProperties
-					if [ -d $BACKUP_DIRECTORY ]
-					then
-						echo 
-					else
-						mkdir -p $BACKUP_DIRECTORY
-					fi
+					echo
 					echo -e "Backup directory: ${YELLOW}${BACKUP_DIRECTORY}${NC}"
 					echo -e "Tomcat service name: ${YELLOW}${TOMCAT_SERVICE_NAME}${NC}"
 					echo -e "Catalina home directory: ${YELLOW}${CATALINA_HOME}${NC}"
