@@ -171,7 +171,7 @@ takeDump(){
 
 listDump(){
 	includeProperties
-	ls -lrht $BACKUP_DIRECTORY | awk {'print $5" "$9'}
+	ls -lrht $BACKUP_DIRECTORY | awk {'print $5" "$6"-"$7" "$8" "$9'}
 }
 
 rotate(){
