@@ -9,9 +9,7 @@
 #Cyan         0;36     Light Cyan    1;36
 #Light Gray   0;37     White         1;37
 
-RED='\033[0;31m'
 GREEN='\033[0;32m'
-BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
@@ -35,12 +33,6 @@ printBanner() {
 
 main(){
         printBanner
-        if [ -d $BACKUP_DIR ]
-        then
-		echo "";
-        else
-        	mkdir -p $BACKUP_DIR
-        fi
         case "$1" in
         	
 	 	       -backup)
@@ -128,17 +120,39 @@ main(){
 	       				tomcatStatus=`systemctl is-active ${TOMCAT_SERVICE_NAME}`;
 	        			if [ $tomcatStatus == "failed"  ]
 	        			then
-							echo "Tomcat already stopped, war file will be copied to catalina home..."
-							yes | cp $2 ${CATALINA_HOME}/webapps/ROOT.war
-						fi
+						echo "Tomcat already stopped, war file will be copied to catalina home..."
+						yes | cp $2 ${CATALINA_HOME}/webapps/ROOT.war
+					else
+						echo "Tomcat application is running, it will be stopped first"
+						systemctl stop ${TOMCAT_SERVICE_NAME}
+						yes | cp $2 ${CATALINA_HOME}/webapps/ROOT.war
+						systemctl start ${TOMCAT_SERVICE_NAME}
+					fi
 					;;
 			-version)
 					getVersion
 					;;
+			-restore)
+					includeProperties
+                                        echo "Checking tomcat service status..."
+                                        tomcatStatus=`systemctl is-active ${TOMCAT_SERVICE_NAME}`;
+                                        if [ $tomcatStatus == "failed"  ]
+                                        then
+                                                echo "Tomcat already stopped"
+                                        else
+                                                echo "Tomcat application is running, it will be stopped first"
+                                                systemctl stop ${TOMCAT_SERVICE_NAME}
+					fi
+					restore
+					;;
 			*)
-					help1
+					help
 					;;
 		esac
+}
+
+restore(){
+	dropdb atar && createdb atar
 }
 
 takeDump(){
@@ -158,17 +172,18 @@ rotate(){
 	find $BACKUP_DIRECTORY -mtime +$1 -name "*.sql.gz" -delete
 }
 
-help1(){
+help(){
+	includeProperties
 	usage="$(basename "$0") [-help] [-backup] [-list] [-rotate n] [-show] [-edit] [-restore s] [-upgrade w] -- program to handle whole error prone process 
 	
 where:
 	${YELLOW}-help${NC}		show help text
-	${YELLOW}-backup${NC}		take database backup
-       	${YELLOW}-list${NC}		show backup files
-       	${YELLOW}-rotate n${NC}	apply rotation to backup files, delete all backups which are older than n day(s)
-	${YELLOW}-show${NC}		show backup directory, tomcat service name and catalina home directory
-	${YELLOW}-edit${NC}		edit backup directory
-	${YELLOW}-restore s${NC}	restore form backup file s
+	${YELLOW}-backup${NC}		take database backup under the ${BACKUP_DIRECTORY}
+       	${YELLOW}-list${NC}		show database backup files under the ${BACKUP_DIRECTORY} 
+       	${YELLOW}-rotate n${NC}	apply rotation to database backup files, delete all files which are older than n day(s) under the ${BACKUP_DIRECTORY} 
+	${YELLOW}-show${NC}		show backup directory, tomcat service name, catalina home directory and ATAR URL
+	${YELLOW}-edit${NC}		edit backup directory, tomcat service name, catalina home directory and ATAR URL
+	${YELLOW}-restore s${NC}	restore from backup file s
 	${YELLOW}-upgrade w${NC}	upgrade tomcat application with war file w"
 	echo -e "${usage}"
 }
