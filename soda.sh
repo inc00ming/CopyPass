@@ -185,9 +185,10 @@ help(){
 	
 where:
 	${YELLOW}-help${NC}		show help text
-	${YELLOW}-backup${NC}		take database backup under the ${BACKUP_DIRECTORY}
-       	${YELLOW}-list${NC}		show database backup files under the ${BACKUP_DIRECTORY} 
-       	${YELLOW}-rotate n${NC}	apply rotation to database backup files, delete all files which are older than n day(s) under the ${BACKUP_DIRECTORY} 
+	${YELLOW}-version${NC}	show ATAR version and build number
+	${YELLOW}-backup${NC}		take database backup under the ${YELLOW}${BACKUP_DIRECTORY}${NC}
+       	${YELLOW}-list${NC}		show database backup files under the ${YELLOW}${BACKUP_DIRECTORY}${NC} 
+       	${YELLOW}-rotate n${NC}	apply rotation to database backup files, delete all files which are older than n day(s) under the ${YELLOW}${BACKUP_DIRECTORY}${NC} 
 	${YELLOW}-show${NC}		show backup directory, tomcat service name, catalina home directory and ATAR URL
 	${YELLOW}-edit${NC}		edit backup directory, tomcat service name, catalina home directory and ATAR URL
 	${YELLOW}-restore s${NC}	restore from backup file s
