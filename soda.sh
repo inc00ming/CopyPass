@@ -112,7 +112,7 @@ main(){
                                         else
                                         	sed -i "s;ATAR_URL=.*;ATAR_URL=${NEW_ATAR_URL};g" properties.conf
                                         fi
-
+					includeProperties
 					echo
 					echo -e "Backup directory: ${YELLOW}${BACKUP_DIRECTORY}${NC}"
 					echo -e "Tomcat service name: ${YELLOW}${TOMCAT_SERVICE_NAME}${NC}"
