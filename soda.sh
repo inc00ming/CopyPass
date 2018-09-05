@@ -166,6 +166,7 @@ takeDump(){
 	includeProperties
 	version=$( getVersion )
 	backuploc="${BACKUP_DIRECTORY}/atar_${version}_db_backup_`date +%d-%m-%y`.sql.gz"
+	yes | cp ${CATALINA_HOME}/webapps/ROOT.war ${BACKUP_DIRECTORY}/atar_${version}.war
 	sudo -Hiu postgres pg_dump -v atar | gzip > "${backuploc}"
 }
 
@@ -209,3 +210,4 @@ includeProperties(){
 	. properties.conf
 }
 main $1 $2
+exit
