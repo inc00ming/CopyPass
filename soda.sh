@@ -177,7 +177,8 @@ listDump(){
 
 rotate(){
 	includeProperties
-	find $BACKUP_DIRECTORY -mtime +$1 -name "*.sql.gz" -delete
+	find $BACKUP_DIRECTORY -mmin  +$(($1*60*24)) -name "*.sql.gz" -delete
+	find $BACKUP_DIRECTORY -mmin  +$(($1*60*24)) -name "*.war" -delete
 }
 
 help(){
